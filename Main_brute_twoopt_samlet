@@ -1,70 +1,80 @@
-int n = 6; // Størrelsen af grafen, n = antallet af byer
-import java.util.Arrays;
+int n = 7; // Størrelsen af grafen, n = antallet af byer
+
+import java.util.Arrays;  // importering af vigtige Java utilities.
 import java.util.Collections;
 import java.util.Vector;
 
+float button1x = 800;  // Placerings variabler til vores knapper.
+float button2x = 900;
+float button1y = 570;
+float button2y = 570;
+float button1colour= 70;
+float button2colour = 70;
+int buttoncount = 0;
 
 PVector[] knuder = new PVector[n]; // Init - for vektorvariabel som array af n's størrelse.
-PVector[] knuder2 = new PVector[n];
-PVector[] knuderbest = new PVector[n]; // Visualiserings array, til at displaye den korteste eulertur.
-PVector[] knuderbest2 = new PVector[n];
+PVector[] knuder2 = new PVector[n]; // Init - for 2. vektorvariabel som array af n's størrelse.
+PVector[] knuderbest = new PVector[n]; // Visualiserings array, til at displaye den korteste hamiltoniske cyklus.
+PVector[] knuderbest2 = new PVector[n]; // Visualiserings array, til at displaye den korteste hamiltoniske cyklus for 2. array. 
 PVector[] m = new PVector[n]; // 2-opt Algoritmens middel array-del.
 PVector[] l = new PVector[n]; // 2-opt Algoritmens venstre array-del.
 PVector[] r = new PVector[n]; // 2-opt Algoritmens højre array-del.
-double a = 0;
+int[] order; // Array af indeksnumre til bruteforce-delen.
+
+double a = 0; // Distance variabler
 double a2 = 0;
 double bestEver = 10000000000000000000000000000000000000.1;
 double bestEver2 = 10000000000000000000000000000000000000.1;
-boolean b = true;
-boolean bOneshot = true;
-
-float displayBest = 0;
-float displayBest2 = 0;
-int t2 = 0;
-int buf = t2;
-int framerate = 120;
-int[] order;
-
-float fact = 1;
-float t = 0;
-boolean o = true;
-boolean reset = true;
 double startdistance = 0;
 double startdistance2 = 0;
-int k = 0;
-boolean nyGraf = true;
-boolean p = true;
-boolean b2 = true;
-boolean oneshot2 = true;
+float displayBest = 0;
+float displayBest2 = 0;
 
+boolean b = true; // Boolske variabler (mest til funktionalitet i programmet)
+boolean b2 = true;
+boolean bOneshot = true;
+boolean oneshot2 = true;
+boolean button1shot = true;
+boolean button2shot = true;
+boolean o = true;
+boolean reset = true;
+boolean nyGraf = true;
+
+int t2 = 0; // 2 opt iterations-tæller
+int buf = t2; 
+
+int framerate = 240; // Start frameraten for programmet.
+
+float fact = 1;
+float t = 0; // brute force iterations-tæller
+int k = 0;
+
+//----------- ###### ------ ###### ----------------
 
 void setup() {
   size(1000, 600);
   fact = factorial(n);
-  // --##Generate a random structure of vertice's of n'th size.##--
   order = new int[n];
+  // Generator for tilfældige knudepunkter ---vvvv---
   for (int i = 0; i<n; i++) {
     knuder[i] = new PVector(random(width-200)+170, random(height-200)+150);
     order[i] = i;
   }
+  //-------######-------
+  //Kopiering af knudepunkter til andet array ---vvvv---
   arrayCopy(knuder, 0, knuderbest, 0, knuder.length);
   arrayCopy(knuder, 0, knuder2, 0, knuder.length);
   arrayCopy(knuder2, 0, knuderbest2, 0, knuder2.length);
   println("n =", n);
-  System.out.println(Arrays.toString(knuder));
+  //-------######-------
 }
-// ----####----####----####----
 
 void draw() {
   frameRate(framerate);
   background(55);
-
-
-
-
-  // BRUTE FORCE 
-
-
+  buttoncount++;
+  
+  // Tegning for grafer "blok" -----#######------
   for (int i = 0; i<(order.length); i++) {
     if (o == true) {
       if (i == (order.length)-1) {
@@ -87,9 +97,6 @@ void draw() {
         line(knuderbest[i].x, knuderbest[i].y, knuderbest[i+1].x, knuderbest[i+1].y);
       }
     }
-
-    println(order);
-
     if (i == knuder.length-1) {
       if (b == true) {
         stroke(0);
@@ -106,7 +113,6 @@ void draw() {
         noStroke();
       }
       strokeWeight(1);
-      //println(""+e);
       fill(100, 100, 100, 10);
       line(knuder[i].x, knuder[i].y, knuder[i+1].x, knuder[i+1].y);
     }
@@ -125,14 +131,6 @@ void draw() {
         ellipse(knuderbest[i].x, knuderbest[i].y, 6, 6);
       }
     }
-    //Laver numrer i hver af punkterne
-    /*if (i>9) {
-     fill(0);
-     text(""+(i+1), knuderbest[i].x-7, knuderbest[i].y+5);
-     } else {
-     fill(0);
-     text(""+(i+1), knuderbest[i].x-3, knuderbest[i].y+5);
-     }*/
   }
   for (int i = 0; i<(knuderbest2.length); i++) {
     if (o == true) {
@@ -191,14 +189,12 @@ void draw() {
       }
     }
   }
-  //if (t > 120) delay(1000000000);
+  //--------#####----------------------------
+  // BRUTE FORCE Blok ---------######--------
   if (b == true) {
     bruteForce();
-
     double dist = 0;
     double sum = 0;
-
-    System.out.println(Arrays.toString(knuder));
     for (int i = 0; i <knuder.length; i++) {
       if (i == knuder.length - 1) {
         a = knuder[i].dist(knuder[0]);
@@ -221,6 +217,8 @@ void draw() {
       }
     }
   }
+  //--------########--------------------
+  // 2 OPT Blok --------#######---------
   if (b2 == true) {
     double dist2 = 0;
     double sum2 = 0;
@@ -246,7 +244,7 @@ void draw() {
         }
       }
     }
-
+    // 2 OPT ALGORITME ----------#########-----------
     int buf2 = k;
   top:
     {
@@ -260,10 +258,10 @@ void draw() {
             invertUsingFor(m);
             l = Arrays.copyOfRange(knuder2, 0, Math.min((i + 1) % n, (j + 1) % n));
             r = Arrays.copyOfRange(knuder2, Math.max((i + 1) % n, (j + 1) % n), n);
-            println("r: ", r.length, "l: ", l.length, "m: ", m.length);
             System.arraycopy(l, 0, knuder2, 0, l.length);
             System.arraycopy(m, 0, knuder2, l.length, m.length);
             System.arraycopy(r, 0, knuder2, l.length+m.length, r.length);
+            println("l: ", l.length, "m: ", m.length, "r: ", r.length);
             //System.out.println(Arrays.toString(knuder));
             t2++;
             k = i; // Scanner kun ucheckede kanter.
@@ -273,13 +271,26 @@ void draw() {
         }
       }
       k = 0;
-      //if (t == fact) p = !p;
-      //if (reset == true) p = !p;
     }
     if (t2 == buf && buf2 == 0) {
       b2 = false;
     }
   }
+  //----------#######---------------------
+  // UI Blok -----------####--------------
+  if (buttoncount > 3) {
+    button1colour = 70;
+    button2colour = 70;
+  }
+  stroke(170);
+  fill(button1colour);
+  strokeWeight(1);
+  rect(800, 570, 100, 100);
+  fill(button2colour);
+  rect(900, 570, 100, 100);
+  fill(255);
+  text("Ny Graf", 828, 590);
+  text("Fjern bedste", 920, 590);
   fill(255);
   text("-Brute", 230, 20);
   text("-2-Opt", 230, 35);
@@ -296,7 +307,7 @@ void draw() {
   text("kortest dist: Brute = "+(int)displayBest, 15, 15);
   text("FPS: "+framerate, 15, 165);
   strokeWeight(2);
-  text("Lexografical Brute + 2-opt", 10, height-5);
+  text("Leksikografisk Brute + 2 Opt.", 5, height-5);
   text("Start-Dist: Brute =" + (int)startdistance, 15, 30);
   if (b == true)
     text("Arbejder..  " + (int)((t/fact)*100) + "%", 15, 105);
@@ -306,38 +317,24 @@ void draw() {
   text("Kortest-Dist: 2-Opt =" +(int)displayBest2, 15, 60);
   if (displayBest < displayBest2)
     text("Ikke optimal heurestik", 15, 120);
-  println(t);
+  //println(t);
   if (bOneshot == true) {
     bOneshot = !bOneshot;
   }
   if (b == false) {
     text("Tid-Sparret: " + (100-((t2/fact)*100)) +"%", 15, 135);
-    text("Brute-force steps: " + t,15, 180);
+    text("Brute-force steps: " + t, 15, 180);
     text("2-Opt steps: " + t2, 15, 195);
     if (displayBest < displayBest2)
       text("Fejl-Margen: " + (float)((displayBest2/displayBest)*100-100) + "%", 15, 150);
   }
+  // ------------##------------
 }
 
-void keyPressed () {
-  if (framerate < 240) {
-    if (keyCode == RIGHT) {
-      framerate += 1;
-    }
-  }
-  if (framerate > 1) {
-    if (keyCode == LEFT) {
-      framerate -= 1;
-    }
-  }
-  if (key == ENTER) {
-    delay(10000);
-  }
-
-  if (key == BACKSPACE) {
-    o = !o;
-  }
-  if (key == TAB) {
+// Knap variabel-sætter-funktioner.
+void mouseReleased () {
+  // Ny graf knap
+  if (mouseX>button1x && mouseX <button2x && mouseY>button1y) {
     a = 0;
     bestEver = 10000000000000000000000000000000000000.1;
     displayBest = 0;
@@ -356,17 +353,40 @@ void keyPressed () {
     arrayCopy(knuder2, 0, knuderbest2, 0, knuder2.length);
     fact = factorial(n);
     reset = true;
-    for (int i = 0; i<1; i++) {
-      p = !p;
-    }
     nyGraf = true;
     k = 0;
     redraw();
     b = true;
     b2 = true;
+    button1colour = 130;
+    buttoncount = 0;
+  }
+  // Vis bedste - knap
+  if (mouseX>button2x && mouseY>button2y) {
+    o = !o;
+    button2colour = 130;
+    buttoncount = 0;
   }
 }
 
+// Tastatur-blok
+void keyPressed () {
+  if (framerate < 240) {
+    if (keyCode == RIGHT) {
+      framerate += 1;
+    }
+  }
+  if (framerate > 1) {
+    if (keyCode == LEFT) {
+      framerate -= 1;
+    }
+  }
+  if (key == ENTER) {
+    delay(10000);
+  }
+}
+
+// Funktion til at spejlvende et array
 void invertUsingFor(Object[] array) {
   for (int i = 0; i < array.length / 2; i++) {
     Object temp = array[i];
@@ -375,10 +395,10 @@ void invertUsingFor(Object[] array) {
   }
 }
 
+  // Leksikografisk bruteforce funktion
 void bruteForce() {
   t++;
-  // STEP 1 of the algorithm
-  // https://www.quora.com/How-would-you-explain-an-algorithm-that-generates-permutations-using-lexicographic-ordering
+  // STEP 1
   int largestI = -1;
   for (int i = 0; i < order.length - 1; i++) {
     if (order[i] < order[i + 1]) {
@@ -402,7 +422,7 @@ void bruteForce() {
     // STEP 3
     swap(order, largestI, largestJ);
 
-    // STEP 4: reverse from largestI + 1 to the end
+    // STEP 4
     int size = order.length - largestI - 1;
     int[] endArray = new int[size];
     arrayCopy(order, largestI + 1, endArray, 0, size);
@@ -419,6 +439,7 @@ void bruteForce() {
   }
 }
 
+// Funktion til at finde fakultet af en integer
 int factorial(int n) {
   if (n == 1) {
     return 1;
@@ -427,17 +448,9 @@ int factorial(int n) {
   }
 }
 
+ //Swap Funktion brugt i bruteforce-blokken.
 void swap(int[] a, int i, int j) {
   int temp = a[i];
   a[i] = a[j];
   a[j] = temp;
-}
-
-void order() { 
-  PVector temp[] = new PVector[knuder.length]; 
-
-  for (int i=0; i<knuder.length-1; i++) 
-    knuder[order[i]] = temp[i]; 
-
-  knuder = temp;
 }
